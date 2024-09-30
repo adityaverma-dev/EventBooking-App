@@ -1,0 +1,69 @@
+const bcrypt = require('bcryptjs');
+const User = require('../../models/user');
+const jwt = require('jsonwebtoken')
+
+
+const transformBooking = booking => {
+    return {
+        ...booking._doc,
+        _id: booking.id,
+        user: user.bind(this, booking._doc.user),
+        event: singleEvent.bind(this, booking._doc.event),
+        createdAt: new Date(booking._doc.createdAt).toISOString(),
+        updatedAt: new Date(booking._doc.updatedAt).toISOString()
+    }
+}
+
+
+
+
+module.exports = {
+ 
+   
+
+    createUser: async args => {
+        try {
+            const existingUser = await User.findOne({ email: args.userInput.email })
+
+            if (existingUser) {
+                throw new Error('User Exists already')
+            }
+
+            const hashedPassword = await bcrypt.hash(args.userInput.password, 12)
+
+
+
+            const user = new User({
+                email: args.userInput.email,
+                password: hashedPassword
+            })
+            const result = await user.save();
+
+
+            return { ...result._doc, password: null, _id: result.id }
+
+        }
+        catch (err) {
+            throw err;
+        };
+
+
+    },
+    login: async ({email, password}) => {
+        const user = await User.findOne({email: email});
+        if(!user) {
+            throw new Error('User does not exist')
+        }
+    const isEqual =    await bcrypt.compare(password, user.password);
+    if(!isEqual) {
+        throw new Error('Password is not correct')
+    }
+const token =  jwt.sign({userId: user.id, 
+    email: user.email}, 
+    'secretkey', 
+ {expiresIn: '1h'});
+ return {
+    userId: user.id, token: token, tokenExpiration: 1
+ }
+    }
+};    
